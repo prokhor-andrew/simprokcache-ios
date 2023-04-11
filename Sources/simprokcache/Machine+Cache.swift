@@ -94,7 +94,18 @@ public extension Machine {
                         switch trigger {
                         case .int(.didStartListening(let key)):
                             return OutlineTransition(
-                                .finale(),
+                                OutlineBuilder()
+                                    .loop { event in
+                                        switch event {
+                                        case .int(.didGetValueWhileListening(let key, let value)):
+                                            return .loop([.ext(.didGetValueWhileListening(key: key, value: value))])
+                                        default:
+                                            return .loop([])
+                                        }
+                                    }
+                                    .then { _ in
+                                        OutlineTransition(.finale())
+                                    },
                                 effects: .ext(.didStartListening(key: key))
                             )
                         default:
