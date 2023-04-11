@@ -1,0 +1,32 @@
+{
+  "pins" : [
+    {
+      "identity" : "simprokmachine-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/simprok-dev/simprokmachine-ios.git",
+      "state" : {
+        "revision" : "8061cb66620b6be1697d1a0af886c9f46eff5bc8",
+        "version" : "1.2.3"
+      }
+    },
+    {
+      "identity" : "simprokstate-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/simprok-dev/simprokstate-ios.git",
+      "state" : {
+        "revision" : "b53e764c2deebf3478b23d86256aad007d2b6060",
+        "version" : "1.2.27"
+      }
+    },
+    {
+      "identity" : "simproktools-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/simprok-dev/simproktools-ios.git",
+      "state" : {
+        "revision" : "8bc6367bd4cb39f345bfde2e5fbc697218c84930",
+        "version" : "1.2.44"
+      }
+    }
+  ],
+  "version" : 2
+}
