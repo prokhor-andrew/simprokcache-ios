@@ -14,113 +14,101 @@ import simprokstate
 public extension Machine {
     
     private static func willGetOutline() -> Outline<CacheOutput, CacheInput, CacheInput, CacheOutput> {
-        Outline.create { trigger in
-            switch trigger {
-            case .ext(.willGet(let key)):
-                return OutlineTransition(
-                    Outline.create { trigger in
-                        switch trigger {
-                        case .int(.didGet(let key, let value)):
-                            return OutlineTransition(
-                                .finale(),
-                                effects: .ext(.didGet(key: key, value: value))
-                            )
-                        default:
-                            return nil
-                        }
-                    },
-                    effects: .int(.willGet(key: key))
-                )
-            default:
-                return nil
+        OutlineBuilder()
+            .when { trigger in
+                switch trigger {
+                case .ext(.willGet(let key)):
+                    return [.int(.willGet(key: key))]
+                default:
+                    return nil
+                }
             }
-        }
+            .when { trigger in
+                switch trigger {
+                case .int(.didGet(let key, let value)):
+                    return [.ext(.didGet(key: key, value: value))]
+                default:
+                    return nil
+                }
+            }
+            .build(.finale())
     }
     
     private static func willSetOutline() -> Outline<CacheOutput, CacheInput, CacheInput, CacheOutput> {
-        Outline.create { trigger in
-            switch trigger {
-            case .ext(.willSet(let value, let key)):
-                return OutlineTransition(
-                    Outline.create { trigger in
-                        switch trigger {
-                        case .int(.didSet(let key)):
-                            return OutlineTransition(
-                                .finale(),
-                                effects: .ext(.didSet(key: key))
-                            )
-                        default:
-                            return nil
-                        }
-                    },
-                    effects: .int(.willSet(value: value, key: key))
-                )
-            default:
-                return nil
+        OutlineBuilder()
+            .when { trigger in
+                switch trigger {
+                case .ext(.willSet(let value, let key)):
+                    return [.int(.willSet(value: value, key: key))]
+                default:
+                    return nil
+                }
             }
-        }
+            .when { trigger in
+                switch trigger {
+                case .int(.didSet(let key)):
+                    return [.ext(.didSet(key: key))]
+                default:
+                    return nil
+                }
+            }
+            .build(.finale())
     }
 
     private static func cancelling() -> Outline<CacheOutput, CacheInput, CacheInput, CacheOutput> {
-        Outline.create { trigger in
-            switch trigger {
-            case .ext(.willStopListening(let key)):
-                return OutlineTransition(
-                    Outline.create { trigger in
-                        switch trigger {
-                        case .int(.didStopListening(let key)):
-                            return OutlineTransition(
-                                .finale(),
-                                effects: .ext(.didStopListening(key: key))
-                            )
-                        default:
-                            return nil
-                        }
-                    },
-                    effects: .int(.willStopListening(key: key))
-                )
-            default:
-                return nil
+        OutlineBuilder()
+            .when { trigger in
+                switch trigger {
+                case .ext(.willStopListening(let key)):
+                    return [.int(.willStopListening(key: key))]
+                default:
+                    return nil
+                }
             }
-        }
+            .when { trigger in
+                switch trigger {
+                case .int(.didStopListening(let key)):
+                    return [.ext(.didStopListening(key: key))]
+                default:
+                    return nil
+                }
+            }
+            .build(.finale())
     }
     
     private static func listening() -> Outline<CacheOutput, CacheInput, CacheInput, CacheOutput> {
-        Outline.create { trigger in
-            switch trigger {
-            case .ext(.willStartListening(let key)):
-                return OutlineTransition(
-                    Outline.create { trigger in
-                        switch trigger {
-                        case .int(.didStartListening(let key)):
-                            return OutlineTransition(
-                                OutlineBuilder()
-                                    .loop { event in
-                                        switch event {
-                                        case .int(.didGetValueWhileListening(let key, let value)):
-                                            return .loop([.ext(.didGetValueWhileListening(key: key, value: value))])
-                                        default:
-                                            return .loop([])
-                                        }
-                                    }
-                                    .then { _ in
-                                        OutlineTransition(.finale())
-                                    },
-                                effects: .ext(.didStartListening(key: key))
-                            )
-                        default:
-                            return nil
-                        }
-                    }.switchOnTransition(
-                        to: cancelling(),
-                        doneOnFinale: false
-                    ),
-                    effects: .int(.willStartListening(key: key))
-                )
-            default:
-                return nil
+        OutlineBuilder()
+            .when { trigger in
+                switch trigger {
+                case .ext(.willStartListening(let key)):
+                    return [.int(.willStartListening(key: key))]
+                default:
+                    return nil
+                }
             }
-        }
+            .handle { state in
+                state.switchOnTransition(
+                    to: cancelling(),
+                    doneOnFinale: false
+                )
+            }
+            .when { trigger in
+                switch trigger {
+                case .int(.didStartListening(let key)):
+                    return [.ext(.didStartListening(key: key))]
+                default:
+                    return nil
+                }
+            }
+            .loop { trigger in
+                switch trigger {
+                case .int(.didGetValueWhileListening(let key, let value)):
+                    return (true, [.ext(.didGetValueWhileListening(key: key, value: value))])
+                default:
+                    return (true, [])
+                }
+            }
+            .build(.finale())
     }
     
     private class Holder2: NSObject {

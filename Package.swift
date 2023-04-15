@@ -14,7 +14,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/simprok-dev/simproktools-ios.git",
-            exact: .init(1, 2, 44)
+            exact: .init(1, 2, 47)
         ),
     ],
     targets: [
